@@ -1,14 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db } from "../firebase/config";
 
 // firebase imports
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-export const useCollection = collec => {
+export const useCollection = (collec, _query) => {
   const [documents, setDocuments] = useState(null);
- 
+
+  const q = useRef(_query).current;
+
   useEffect(() => {
     let ref = collection(db, collec);
+
+    if (q) {
+      ref = query(ref, where(...q));
+    }
 
     const unsub = onSnapshot(ref, snapshot => {
       let results = [];
@@ -19,7 +25,7 @@ export const useCollection = collec => {
     });
 
     return () => unsub();
-  }, [collec]);
+  }, [collec, q]);
 
   return { documents };
 };
